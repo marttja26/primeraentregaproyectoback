@@ -27,11 +27,9 @@ class ContainerFs {
 		const objetos = await this.getAll();
 		const objeto = objetos.find((obj) => obj.id == id);
 		if (objeto == undefined) {
-			throw new Error(
-				`Ocurrio un error, no se encontro el id ${id}`
-			);
+			throw new Error(`Ocurrio un error, no se encontro el id ${id}`);
 		} else {
-			return objeto
+			return objeto;
 		}
 	}
 
