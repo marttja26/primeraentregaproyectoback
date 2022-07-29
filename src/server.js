@@ -187,6 +187,10 @@ carritoRouter.delete('/:id/productos/:id_prod', async (req, res) => {
 	res.end();
 });
 
+app.all('*', (req, res) => {
+	res.json({ error: -2, description: `ruta ${req.originalUrl} metodo ${req.method} no implementada`});
+});
+
 // Server
 
 app.use(express.json());
