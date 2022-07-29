@@ -18,6 +18,7 @@ class ContainerFs {
 			);
 			return objetos;
 		} catch (error) {
+			console.log(error);
 			return [];
 		}
 	}
@@ -25,7 +26,13 @@ class ContainerFs {
 	async get(id) {
 		const objetos = await this.getAll();
 		const objeto = objetos.find((obj) => obj.id == id);
-		return objeto;
+		if (objeto == undefined) {
+			throw new Error(
+				`Ocurrio un error, no se encontro el id ${id}`
+			);
+		} else {
+			return objeto
+		}
 	}
 
 	async save(objeto) {
@@ -35,8 +42,8 @@ class ContainerFs {
 			return Math.max(a, b);
 		}, 0);
 		const newId = largestId + 1;
-		const hora = new Date().toLocaleString('es-AR');
-		objetos.push({ ...objeto, hora, id: newId || 1 });
+		const timestamp = new Date().toLocaleString('es-AR');
+		objetos.push({ ...objeto, timestamp, id: newId || 1 });
 		try {
 			await fs.promises.writeFile(this.ruta, JSON.stringify(objetos));
 			return newId;
@@ -89,8 +96,8 @@ class ContainerFs {
 	}
 }
 
-const carritosApi = new ContainerFs('.src/files/cart.json');
-const productosApi = new ContainerFs('.src/files/products.json');
+const carritosApi = new ContainerFs('./src/cart.json');
+const productosApi = new ContainerFs('./src/products.json');
 
 // ADMIN
 
@@ -111,7 +118,7 @@ const noEsAdmin = (ruta, metodo) => {
 
 const onlyAdm = (req, res, next) => {
 	if (!Admin) {
-		res.json(noEsAdmin());
+		res.json(noEsAdmin(req.baseUrl, req.method));
 	} else {
 		next();
 	}
@@ -129,7 +136,7 @@ productosRouter.get('/:id', async (req, res) => {
 	res.json(await productosApi.get(parseInt(req.params.id)));
 });
 
-productosRouter.post('/:id', onlyAdm, async (req, res) => {
+productosRouter.post('/', onlyAdm, async (req, res) => {
 	res.json(await productosApi.save(req.body));
 });
 
@@ -162,11 +169,12 @@ carritoRouter.get('/:id/productos', async (req, res) => {
 	res.json(carrito.productos);
 });
 
-carritoRouter.post('/:id/productos', async (req, res) => {
+carritoRouter.post('/:id/:productos', async (req, res) => {
 	const carrito = await carritosApi.get(parseInt(req.params.id));
-	const producto = await productosApi.get(req.body.id);
+	const producto = await productosApi.get(parseInt(req.params.productos));
 	carrito.productos.push(producto);
 	await carritosApi.update(carrito, parseInt(req.params.id));
+	res.end();
 });
 
 carritoRouter.delete('/:id/productos/:id_prod', async (req, res) => {
@@ -183,9 +191,8 @@ carritoRouter.delete('/:id/productos/:id_prod', async (req, res) => {
 
 // Server
 
-productosRouter.use(express.json());
-carritoRouter.use(express.json());
-app.use(express.urlencoded)({ extended: true });
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 app.use('/api/productos', productosRouter);
