@@ -101,7 +101,7 @@ const productosApi = new ContainerFs('./src/products.json');
 // HANDLER
 
 const urlCheck = (req, res, next) => {
-	if (req.url === '/api/carrito' || req.url === '/api/productos')
+	if (req.url.includes('/api/carrito') || req.url.includes('/api/productos'))
 		next()
 	else
 		res.json({
