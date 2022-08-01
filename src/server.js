@@ -97,6 +97,20 @@ class ContainerFs {
 const carritosApi = new ContainerFs('./src/cart.json');
 const productosApi = new ContainerFs('./src/products.json');
 
+
+// HANDLER
+
+const urlCheck = (req, res, next) => {
+	if (req.url === '/api/carrito' || req.url === '/api/productos')
+		next()
+	else
+		res.json({
+			error: -2,
+			description: `ruta ${req.originalUrl} metodo ${req.method} no implementada`,
+		});
+};
+
+
 // ADMIN
 
 const Admin = true;
@@ -187,15 +201,13 @@ carritoRouter.delete('/:id/productos/:id_prod', async (req, res) => {
 	res.end();
 });
 
-app.all('*', (req, res) => {
-	res.json({ error: -2, description: `ruta ${req.originalUrl} metodo ${req.method} no implementada`});
-});
 
 // Server
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
+app.use(urlCheck)
 
 app.use('/api/productos', productosRouter);
 app.use('/api/carrito', carritoRouter);
